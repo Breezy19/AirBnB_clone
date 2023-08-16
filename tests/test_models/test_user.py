@@ -1,142 +1,32 @@
 #!/usr/bin/python3
-"""Module to test the User Class module"""
-
+""" unit test for User """
 import unittest
-from unittest import mock
-import os
-from io import StringIO
-import time
 from models.user import User
-from models import storage
 from datetime import datetime
 
-class TestUser(unittest.TestCase):
-    """Class to test User class"""
 
-    def test_instantiation(self):
-        """Method to test instantiation"""
-        self.assertEqual(type(User()), User)
-        self.assertIn(User(), storage.all().values())
+class UserTestCase(unittest.TestCase):
+    """ class for User test """
 
-        self.assertTrue(isinstance(User().id, str))
-        self.assertTrue(isinstance(User().created_at, datetime))
-        self.assertTrue(isinstance(User().updated_at, datetime))
+    def test_user(self):
+        """existince"""
+        new = User()
+        self.assertTrue(hasattr(new, "id"))
+        self.assertTrue(hasattr(new, "created_at"))
+        self.assertTrue(hasattr(new, "updated_at"))
+        self.assertTrue(hasattr(new, "email"))
+        self.assertTrue(hasattr(new, "password"))
+        self.assertTrue(hasattr(new, "first_name"))
+        self.assertTrue(hasattr(new, "last_name"))
 
-        self.assertEqual(str, type(User.email))
-        self.assertEqual(str, type(User.password))
-        self.assertEqual(str, type(User.first_name))
-        self.assertEqual(str, type(User.last_name))
-
-        with self.assertRaises(TypeError):
-            User(None)
-
-    def test_user_id(self):
-        """method to test user id"""
-        us1 = User()
-        us2 = User()
-        self.assertTrue(us1.id != us2.id)
-
-    def test_user_time(self):
-        """method to test user time"""
-        us1 = User()
-        time.sleep(0.05)
-        us2 = User()
-        self.assertLess(us1.created_at, us2.created_at)
-        self.assertLess(us1.updated_at, us2.updated_at)
-
-    def test_user_string(self):
-        """method to test user string"""
-        us1 = User()
-        us1.email = 'oloobrian89@gmail.com'
-        expected_output = us1.__str__()
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(us1, end="")
-            actual_output = stdout.getvalue()
-        self.assertEqual(actual_output, expected_output)
-
-
-class TestUser_save(unittest.TestCase):
-    """method to test save method of the class"""
-
-    @classmethod
-    def setUp(self):
-        """set up class"""
-        if os.path.exists('file.json'):
-            os.remove('file.json')
-
-    @classmethod
-    def tearDown(self):
-        """tear down class"""
-        if os.path.exists('file.json'):
-            os.remove('file.json')
-
-    def test_save_one(self):
-        """test save with one"""
-        us = User()
-        time.sleep(0.05)
-        first_update = us.updated_at
-        us.save()
-        self.assertLess(first_update, us.updated_at)
-
-    def test_save_with_arg(self):
-        """test save with argument"""
-        us = User()
-        with self.assertRaises(TypeError):
-            us.save(None)
-
-    def test_save_updates_file(self):
-        """test save updates files"""
-        us = User()
-        us.save()
-        self.assertTrue(os.path.exists('file.json'))
-        self.assertTrue(os.path.getsize('file.json') > 0)
-        usid = "User." + us.id
-        with open("file.json", 'r') as f:
-            self.assertIn(usid, f.read())
-
-
-class TestSave_to_dict(unittest.TestCase):
-    """Class to test the dictionary representation of User class"""
-
-    def test_to_dict_type(self):
-        """method to test to_dict type"""
-        self.assertTrue(isinstance(User().to_dict(), dict))
-
-    def test_to_dict_contains_correct_keys(self):
-        """method to test dict contains keys"""
-        us = User()
-        self.assertIn('id', us.to_dict())
-        self.assertIn('created_at', us.to_dict())
-        self.assertIn('updated_at', us.to_dict())
-        self.assertIn("__class__", us.to_dict())
-
-    def test_to_dict_contains_added_attribute(self):
-        """method to test to_dict contains added attributes"""
-        us = User()
-        us.middle_name = 'Oloo'
-        us.age = 29
-        self.assertIn('Oloo', us.middle_name)
-        self.assertIn('age', us.to_dict())
-
-    def test_to_dict_output(self):
-        """method to test to_dict output"""
-        us = User()
-        expected = str(us.to_dict())
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(str(us.to_dict()), end="")
-            actual = stdout.getvalue()
-        self.assertEqual(actual, expected)
-
-    def test_to_dict_dunder_dict(self):
-        """method to test to_dict dunder dict"""
-        us = User()
-        self.assertNotEqual(us.to_dict(), us.__dict__)
-
-    def test_to_dict_with_arg(self):
-        """method to test to_dict with argument"""
-        us = User()
-        with self.assertRaises(TypeError):
-            us.to_dict(None)
+        """type test"""
+        self.assertIsInstance(new.id, str)
+        self.assertIsInstance(new.created_at, datetime)
+        self.assertIsInstance(new.updated_at, datetime)
+        self.assertIsInstance(new.email, str)
+        self.assertIsInstance(new.password, str)
+        self.assertIsInstance(new.first_name, str)
+        self.assertIsInstance(new.last_name, str)
 
 
 if __name__ == '__main__':

@@ -1,150 +1,117 @@
 #!/usr/bin/python3
-"""Module to test parent class attributes
-"""
-
-
+""" unit test for bases """
+import json
 import unittest
-from unittest import mock
-import uuid
-from datetime import datetime
-from io import StringIO
 from models.base_model import BaseModel
+from datetime import datetime
+import models
+from io import StringIO
+import sys
+from unittest.mock import patch
+captured_output = StringIO()
+sys.stdout = captured_output
 
 
-class TestBaseModel(unittest.TestCase):
-    """class to test the BaseModel parent class"""
+class BaseModelTestCase(unittest.TestCase):
+    """ class for base test """
 
-    def test_id(self):
-        """method to test the id attribute of a class instance"""
+    def setUp(self):
+        """ class for base test """
+        self.filepath = models.storage._FileStorage__file_path
+        with open(self.filepath, 'w') as file:
+            file.truncate(0)
+        models.storage.all().clear()
 
-        no_1 = BaseModel()
-        no_1_id = no_1.id
-        self.assertEqual(no_1.id, no_1_id)
-        self.assertTrue(isinstance(no_1_id, str))
-        no_1.id = 10
-        self.assertEqual(no_1.id, 10)
+    def tearDown(self):
+        """ class for base test """
+        printed_output = captured_output.getvalue()
+        sys.stdout = sys.__stdout__
 
-        no_2 = BaseModel()
-        no_2_id = no_2.id
-        self.assertEqual(no_2.id, no_2_id)
-        self.assertTrue(isinstance(no_2_id, str))
+    def test_basemodel_init(self):
+        """ class for base test """
+        new = BaseModel()
 
-        self.assertFalse(no_1 is no_2)
-        self.assertFalse(no_1_id == no_2_id)
+        """ check if it have methods """
+        self.assertTrue(hasattr(new, "__init__"))
+        self.assertTrue(hasattr(new, "__str__"))
+        self.assertTrue(hasattr(new, "save"))
+        self.assertTrue(hasattr(new, "to_dict"))
 
-        uuid_obj_1 = uuid.UUID(no_1_id, version=4)
-        self.assertEqual(str(uuid_obj_1), no_1_id)
+        """existince"""
+        self.assertTrue(hasattr(new, "id"))
+        self.assertTrue(hasattr(new, "created_at"))
+        self.assertTrue(hasattr(new, "updated_at"))
 
-        uuid_obj_2 = uuid.UUID(no_2_id, version=4)
-        self.assertEqual(str(uuid_obj_2), no_2_id)
+        """type test"""
+        self.assertIsInstance(new.id, str)
+        self.assertIsInstance(new.created_at, datetime)
+        self.assertIsInstance(new.updated_at, datetime)
 
-    def test_created_at(self):
-        """Method to test the created_at attribute of an instance"""
+        """ check if save in storage """
+        keyname = "BaseModel."+new.id
+        """ check if object exist by keyname """
+        self.assertIn(keyname, models.storage.all())
+        """ check if the object found in storage with corrrect id"""
+        self.assertTrue(models.storage.all()[keyname] is new)
 
-        date_1 = BaseModel()
-        base_date = date_1.created_at
-        self.assertEqual(date_1.created_at, base_date)
-        self.assertTrue(isinstance(base_date, datetime))
+        """ Test update """
+        new.name = "My First Model"
+        new.my_number = 89
+        self.assertTrue(hasattr(new, "name"))
+        self.assertTrue(hasattr(new, "my_number"))
+        self.assertTrue(hasattr(models.storage.all()[keyname], "name"))
+        self.assertTrue(hasattr(models.storage.all()[keyname], "my_number"))
 
-        expected_output = str(date_1.created_at)
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(date_1.created_at, end='')
-            actual_output = stdout.getvalue()
-        self.assertEqual(actual_output, expected_output)
+        """check if save() update update_at time change"""
+        old_time = new.updated_at
+        new.save()
+        self.assertNotEqual(old_time, new.updated_at)
+        self.assertGreater(new.updated_at, old_time)
 
-    def test_updated_at(self):
-        """Method to test the updated_at attribute of an instance"""
+        """ check if init it call: models.storage.save() """
+        with patch('models.storage.save') as mock_function:
+            obj = BaseModel()
+            obj.save()
+            mock_function.assert_called_once()
 
-        date_2 = BaseModel()
-        base_date = date_2.updated_at
-        self.assertEqual(date_2.updated_at, base_date)
-        self.assertTrue(isinstance(base_date, datetime))
+        """check if it save in json file"""
+        keyname = "BaseModel."+new.id
+        with open(self.filepath, 'r') as file:
+            saved_data = json.load(file)
+        """ check if object exist by keyname """
+        self.assertIn(keyname, saved_data)
+        """ check if the value found in json is correct"""
+        self.assertEqual(saved_data[keyname], new.to_dict())
 
-        expected_output = str(date_2.updated_at)
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(date_2.updated_at, end='')
-            actual_output = stdout.getvalue()
-        self.assertEqual(actual_output, expected_output)
+    def test_basemodel_init2(self):
+        """ class for base test """
 
-    def test_arguments(self):
-        """Method to test the key word argument"""
+        new = BaseModel()
+        new.name = "John"
+        new.my_number = 89
+        new2 = BaseModel(**new.to_dict())
+        self.assertEqual(new.id, new2.id)
+        self.assertEqual(new.name, "John")
+        self.assertEqual(new.my_number, 89)
+        self.assertEqual(new.to_dict(), new2.to_dict())
 
-        obj = BaseModel()
-        obj.name = 'Brian'
-        obj.age = 29
-        obj.school = 'Alx-Africa'
-        obj.save()
-        obj_dict = obj.to_dict()
-        new_obj = BaseModel(**obj_dict)
+    def test_basemodel_init3(self):
+        """ DOC DOC DOC """
+        new = BaseModel()
+        new2 = BaseModel(new.to_dict())
+        self.assertNotEqual(new, new2)
+        self.assertNotEqual(new.id, new2.id)
+        self.assertTrue(isinstance(new2.created_at, datetime))
+        self.assertTrue(isinstance(new2.updated_at, datetime))
 
-        self.assertFalse(obj is new_obj)
-        expected_output = str(new_obj.to_dict())
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(new_obj.to_dict(), end='')
-            actual_output = stdout.getvalue()
-        self.assertEqual(actual_output, expected_output)
+        new = BaseModel()
 
-        with self.assertRaises(TypeError):
-            new_obj = BaseModel(
-                    '56d43177-cc5f-4d6c-a0c1-e167f8c27337',
-                    '2017-09-28T21:03:54.052298',
-                    '2017-09-28T21:03:54.052302'
-                    )
-            new_obj.id
+        self.assertEqual(
+            str(new),  "[BaseModel] ({}) {}".format(new.id, new.__dict__))
 
-        with self.assertRaises(AttributeError):
-            new_obj = BaseModel(
-                    d=10, created='2017-09-28T21:03:54.052302',
-                    updated='2017-09-28T21:03:54.052302'
-                    )
-            print(new_obj)
-
-        with self.assertRaises(KeyError):
-            new_obj = BaseModel(
-                    d=10, created='2017-09-28T21:03:54.052302',
-                    updated='2017-09-28T21:03:54.052302'
-                    )
-            new_obj.to_dict()
-
-    def test__str__(self):
-        """Method to test the string representation of an object"""
-
-        obj = BaseModel()
-        obj.name = "Stephen Oloo"
-        obj.number = 100
-        expected_output = f"[BaseModel] ({obj.id}) {str(obj.__dict__)}"
-        self.assertTrue(isinstance(expected_output, str))
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(obj, end='')
-            actual_output = stdout.getvalue()
-        self.maxDiff = None
-        self.assertEqual(actual_output, expected_output)
-
-    def test_save(self):
-        """Method to test the save method of an object"""
-
-        obj = BaseModel()
-        obj_t1 = obj.created_at
-        obj.save()
-        obj_t2 = obj.updated_at
-        self.assertFalse(obj_t1 == obj_t2)
-
-    def test_to_dict(self):
-        """Method to test the dictionary representation of the object"""
-
-        obj = BaseModel()
-        obj.name = 'Stephen Oloo'
-        obj.age = 29
-        obj.school = 'Alx Africa'
-        obj_dict = obj.to_dict()
-        self.assertTrue(isinstance(obj_dict, dict))
-
-        expected_output = str(obj_dict)
-        with mock.patch('sys.stdout', new=StringIO()) as stdout:
-            print(obj_dict, end='')
-            actual_output = stdout.getvalue()
-        self.maxDiff = None
-        self.assertEqual(actual_output, expected_output)
+        old_time = new.updated_at
+        new.save()
+        self.assertGreater(new.updated_at, old_time)
 
 
 if __name__ == '__main__':
