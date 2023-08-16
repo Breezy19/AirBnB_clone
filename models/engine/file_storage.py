@@ -1,81 +1,64 @@
 #!/usr/bin/python3
-"""Module that define class FileStorage"""
-
+""" Doc is Here """
 import os
 import json
+from models.base_model import BaseModel
+from models.user import User
+from models.place import Place
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.review import Review
+# from models.base_model import BaseModel #avoid circular
+
 
 class FileStorage:
-    """Class Filestorage that serializes instances to JSON and
-        deserializes JSON file to instances
+    """ akr akr """
 
-        Private Class attributes:
-            __file_path: String - path to the JSON file(file.json)
-            __objects: dictionary - empty but will strore all objects by
-                        <class name>.id
-        Public instance methods:
-            all: returns the dictionary __objects
-            new: sets in __objects the obj with key <obj class name>.id
-            save: serializes __objects to the JSON file(path: __file_path)
-            reload: deserializes the JSON file to __objects
-                    (only if the JSON file exists: otherwise do nothing.
-                    If the file doesnt exist, no exeception should be raised
-    """
-
-    __file_path = 'file.json'
+    __file_path = "file.json"
     __objects = {}
 
     def all(self):
-        """instance method that returns the dictionary __object"""
-
+        """ akr akr """
         return FileStorage.__objects
 
     def new(self, obj):
-        """Sets in __object the obj with key
-            Parameter:
-                obj: object to set into a dict
-        """
-        key = '{}.{}'.format(obj.__class__.__name__, obj.id)
-        FileStorage.__objects[key] = obj
+        """ akr akr """
+        id = obj.to_dict()["id"]
+        className = obj.to_dict()["__class__"]
+        keyName = className+"."+id
+        FileStorage.__objects[keyName] = obj
 
     def save(self):
-        """Serializes __objects to the JSON file"""
-
-        with open(FileStorage.__file_path, 'w') as json_file:
-            o = {k: obj.to_dict() for k, obj in FileStorage.__objects.items()}
-            json.dump(o, json_file)
+        """ akr akr """
+        filepath = FileStorage.__file_path
+        data = dict(FileStorage.__objects)
+        for key, value in data.items():
+            data[key] = value.to_dict()
+        with open(filepath, 'w') as f:
+            json.dump(data, f)
 
     def reload(self):
-        """Deserializes the JSON file to __objects"""
-
-        if os.path.exists(FileStorage.__file_path):
-            with open(FileStorage.__file_path, 'r') as json_file:
-                data = json.load(json_file)
-                from models.base_model import BaseModel
-                from models.user import User
-                from models.state import State
-                from models.city import City
-                from models.amenity import Amenity
-                from models.place import Place
-                from models.review import Review
-                for key, value in data.items():
-                    cls_name, obj_id = key.split('.')
-                    if cls_name == 'BaseModel':
-                        cls = BaseModel
-                    elif cls_name == 'User':
-                        cls = User
-                    elif cls_name == 'State':
-                        cls = State
-                    elif cls_name == 'City':
-                        cls = City
-                    elif cls_name == 'Amenity':
-                        cls = Amenity
-                    elif cls_name == 'Place':
-                        cls = Place
-                    elif cls_name == 'Review':
-                        cls = Review
-                    else:
-                        cls = None
-                    if cls:
-                        FileStorage.__objects[key] = cls(**value)
-        else:
-            pass
+        """ akr akr """
+        filepath = FileStorage.__file_path
+        data = FileStorage.__objects
+        if os.path.exists(filepath):
+            try:
+                with open(filepath) as f:
+                    for key, value in json.load(f).items():
+                        if "BaseModel" in key:
+                            data[key] = BaseModel(**value)
+                        if "User" in key:
+                            data[key] = User(**value)
+                        if "Place" in key:
+                            data[key] = Place(**value)
+                        if "State" in key:
+                            data[key] = State(**value)
+                        if "City" in key:
+                            data[key] = City(**value)
+                        if "Amenity" in key:
+                            data[key] = Amenity(**value)
+                        if "Review" in key:
+                            data[key] = Review(**value)
+            except Exception:
+                pass

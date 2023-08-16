@@ -1,12 +1,8 @@
 #!/usr/bin/python3
-"""Module to define class Amenity"""
-
+""" Akr is Here """
 from models.base_model import BaseModel
 
 
 class Amenity(BaseModel):
-    """Class Amenity that inherits from BaseModel
-        Public Attribute:
-            name: empty string
-    """
+    """ AKR AKR """
     name = ""

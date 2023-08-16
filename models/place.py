@@ -1,25 +1,9 @@
 #!/usr/bin/python3
-"""Module to define class Place"""
-
 from models.base_model import BaseModel
 
 
 class Place(BaseModel):
-    """Class Place
-        Public class attributes
-            city_id: empty string: it will be the City.id
-            user_id: empty string: it will be the User.id
-            name: empty string
-            description: empty string
-            number_rooms: integer - 0
-            number_bathrooms: integer - 0
-            max_guest: integer - 0
-            price_by_night: integer - 0
-            latitude: float - 0.0
-            longitude: float - 0.0
-            amenity_ids: list of string: empty list: it will be
-                            the list of Amenity.id later
-    """
+    """ AKR AKR """
     city_id = ""
     user_id = ""
     name = ""
@@ -31,3 +15,8 @@ class Place(BaseModel):
     latitude = 0.0
     longitude = 0.0
     amenity_ids = []
+
+
+"""    def __init__(self, city_id, user_id):
+        Place.city_id = city_id
+        Place.user_id = user_id"""
